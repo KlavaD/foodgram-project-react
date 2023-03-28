@@ -72,7 +72,7 @@ class ListOfIngredients(models.Model):
 
 
 class Recipe(models.Model):
-    tags = models.ManyToManyField(
+    tag = models.ManyToManyField(
         Tag,
         through='TagsRecipes',
         verbose_name='Тэги',
@@ -135,7 +135,8 @@ class TagsRecipes(models.Model):
 class UserRecipeModel(models.Model):
     recipe = models.ForeignKey(
         Recipe,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        verbose_name="Рецепт"
     )
     user = models.ForeignKey(
         User,
@@ -155,8 +156,10 @@ class ShoppingCart(UserRecipeModel):
     class Meta:
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
+        default_related_name = 'shopping_cart'
 
 
 class Favorite(UserRecipeModel):
     class Meta:
         verbose_name = 'Избранное'
+        default_related_name = 'favorite'
