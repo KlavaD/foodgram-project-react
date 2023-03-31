@@ -2,7 +2,7 @@ import re
 
 from django.core.exceptions import ValidationError
 
-PATTERN = r'^[\w.@+-]+\z'
+PATTERN = r'[^\w.@+-]+'
 SYMBOL_NAMES = {' ': 'пробел', ',': 'запятая', '/': 'слэш', '\\': 'бэк-слэш'}
 
 
