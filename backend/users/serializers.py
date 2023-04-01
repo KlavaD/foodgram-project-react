@@ -23,7 +23,18 @@ class UserSerializer(serializers.ModelSerializer):
                                      validators=[username_validator])
     first_name = serializers.CharField(max_length=NAMES_LENGTH)
     last_name = serializers.CharField(max_length=NAMES_LENGTH)
-    is_subscribed = serializers.BooleanField(default=False)
+    is_subscribed = serializers.SerializerMethodField()
+
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        if request is not None and hasattr(request, "user"):
+            user = self.context['request'].user
+            if user.is_anonymous:
+                return False
+            if Follow.objects.filter(user=user,
+                                     author=obj.id).exists():
+                return True
+            return False
 
     class Meta:
         model = User
@@ -77,5 +88,3 @@ class FollowSerializer(serializers.ModelSerializer):
                 message='you are already follow this author!'
             )
         ]
-
-

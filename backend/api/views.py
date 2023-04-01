@@ -8,8 +8,8 @@ from api.mixins import CreateDestroyViewSet
 from api.serializers import (TagsSerializer, RecipesSerializer,
                              PostRecipesSerializer, ShoppingCartSerializer,
                              FavoriteSerializer, IngredientsSerializer)
-from recipes.models import Tag, Recipe, ShoppingCart, Ingredient, \
-    ListOfIngredients
+from recipes.models import (Tag, Recipe, ShoppingCart, Ingredient,
+                            ListOfIngredients)
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -20,8 +20,8 @@ class TagsViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     pagination_class = LimitOffsetPagination
-    # filter_backends = (DjangoFilterBackend,)
-    # filterset_class = RecipesFilter
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipesFilter
     ordering_fields = ['-id']
 
     def perform_create(self, serializer):
@@ -35,7 +35,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
     def get_permissions_class(self):
         if self.request.method in ['POST', 'PATCH']:
             return IsAuthenticated
-        return AllowAny
+        # return AllowAny
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):

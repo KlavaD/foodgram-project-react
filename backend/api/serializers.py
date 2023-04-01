@@ -23,19 +23,10 @@ class IngredientsSerializer(serializers.ModelSerializer):
 
 
 class ListOfIngredientsSerializer(serializers.ModelSerializer):
-    id = serializers.SlugRelatedField(
-        queryset=Ingredient.objects.all(),
-        slug_field='id'
-    )
-    name = serializers.SlugRelatedField(
-        many=True,
-        read_only=True,
-        slug_field='name'
-    )
-    measurement_unit = serializers.SlugRelatedField(
-        many=True,
-        read_only=True,
-        slug_field='measurement_unit'
+    id = serializers.ReadOnlyField(source='ingredient.id')
+    name = serializers.ReadOnlyField(source='ingredient.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit'
     )
 
     class Meta:
