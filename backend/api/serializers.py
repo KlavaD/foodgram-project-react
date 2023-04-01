@@ -23,10 +23,20 @@ class IngredientsSerializer(serializers.ModelSerializer):
 
 
 class ListOfIngredientsSerializer(serializers.ModelSerializer):
-    id = serializers.ReadOnlyField(source='ingredient.id')
-    name = serializers.ReadOnlyField(source='ingredient.name')
-    measurement_unit = serializers.ReadOnlyField(
-        source='ingredient.measurement_unit')
+    id = serializers.SlugRelatedField(
+        queryset=Ingredient.objects.all(),
+        slug_field='id'
+    )
+    name = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field='name'
+    )
+    measurement_unit = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field='measurement_unit'
+    )
 
     class Meta:
         model = ListOfIngredients
@@ -92,7 +102,11 @@ class Base64ImageField(serializers.ImageField):
 
 
 class PostRecipesSerializer(serializers.ModelSerializer):
-    tags = TagsSerializer(many=True, source='tags.id')
+    tags = serializers.SlugRelatedField(
+        many=True,
+        queryset=Tag.objects.all(),
+        slug_field='id'
+    )
     ingredients = ListOfIngredientsSerializer(many=True)
     image = Base64ImageField(required=False, allow_null=True)
     cooking_time = serializers.IntegerField(min_value=1)
@@ -106,17 +120,17 @@ class PostRecipesSerializer(serializers.ModelSerializer):
         read_only_fields = ('author',)
 
     def create(self, validated_data):
-        print(validated_data)
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
 
         recipe = Recipe.objects.create(**validated_data)
-        for tag in tags:
-            TagsRecipes.objects.create(tags=tag,
-                                       recipe=recipe)
+
         for ingredient in ingredients:
-            ListOfIngredients.objects.create(**ingredient,
-                                             recipe=recipe)
+            ListOfIngredients.objects.create(
+                ingredient_id=ingredient.get('id').id,
+                amount=ingredient['amount'],
+                recipe=recipe)
+        recipe.tags.set(tags)
         return recipe
 
     def to_representation(self, instance):

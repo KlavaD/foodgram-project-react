@@ -9,6 +9,10 @@ class ListOfIngredientsAdmin(admin.TabularInline):
     model = ListOfIngredients
 
 
+class TagsRecipesAdmin(admin.TabularInline):
+    model = TagsRecipes
+
+
 class RecipeAdmin(admin.ModelAdmin):
     def tags_list(self, obj):
         return list(tag for tag in obj.tags.all())
@@ -23,10 +27,9 @@ class RecipeAdmin(admin.ModelAdmin):
         'pk', 'name', 'cooking_time',
         'ingredients_list', 'favorite_counts', 'tags_list', 'image'
     )
-    # list_editable = ('tags_list',)
     search_fields = ('name', 'cooking_time',)
-    # list_filter = ('tags_list',)
-    inlines = [ListOfIngredientsAdmin, ]
+    inlines = [ListOfIngredientsAdmin,
+               TagsRecipesAdmin]
     tags_list.short_description = 'Теги'
     ingredients_list.short_description = 'Ингредиенты'
 
