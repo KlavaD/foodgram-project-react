@@ -8,7 +8,7 @@ app_name = 'users'
 router_v1 = routers.DefaultRouter()
 # router_v1.register('subscriptions/', ListFollowViewSet,
 #                    basename='subscriptions')
-router_v1.register(r'(?P<user_id>\d+)/subscribe/', FollowViewSet,
+router_v1.register(r'(?P<user_id>\d+)/subscribe', FollowViewSet,
                    basename='subscribe')
 
 urlpatterns = [

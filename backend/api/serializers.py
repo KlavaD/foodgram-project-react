@@ -1,12 +1,10 @@
 import base64
 
-from django.contrib.auth.models import AnonymousUser
-from django.shortcuts import get_object_or_404
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
 from recipes.models import (Tag, Ingredient, Recipe, ShoppingCart, Favorite,
-                            ListOfIngredients, TagsRecipes)
+                            ListOfIngredients)
 from users.serializers import UserSerializer
 
 
@@ -27,6 +25,25 @@ class ListOfIngredientsSerializer(serializers.ModelSerializer):
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit'
+    )
+
+    class Meta:
+        model = ListOfIngredients
+        fields = ('id', 'name', 'measurement_unit', 'amount')
+
+
+class PostListOfIngredientsSerializer(serializers.ModelSerializer):
+    id = serializers.SlugRelatedField(
+        queryset=Ingredient.objects.all(),
+        slug_field='id'
+    )
+    name = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='name'
+    )
+    measurement_unit = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='measurement_unit'
     )
 
     class Meta:
@@ -63,8 +80,8 @@ class RecipesSerializer(serializers.ModelSerializer):
             user = self.context['request'].user
             if user.is_anonymous:
                 return False
-            if get_object_or_404(ShoppingCart, user=user,
-                                 recipe=obj.id):
+            if ShoppingCart.objects.filter(user=user,
+                                           recipe=obj.id).exists():
                 return True
             return False
 
@@ -98,7 +115,7 @@ class PostRecipesSerializer(serializers.ModelSerializer):
         queryset=Tag.objects.all(),
         slug_field='id'
     )
-    ingredients = ListOfIngredientsSerializer(many=True)
+    ingredients = PostListOfIngredientsSerializer(many=True)
     image = Base64ImageField(required=False, allow_null=True)
     cooking_time = serializers.IntegerField(min_value=1)
 
@@ -118,7 +135,7 @@ class PostRecipesSerializer(serializers.ModelSerializer):
 
         for ingredient in ingredients:
             ListOfIngredients.objects.create(
-                ingredient_id=ingredient.get('id').id,
+                ingredient_id=ingredient.get('id').pk,
                 amount=ingredient['amount'],
                 recipe=recipe)
         recipe.tags.set(tags)

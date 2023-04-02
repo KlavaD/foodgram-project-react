@@ -1,5 +1,6 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
@@ -24,18 +25,13 @@ class RecipesViewSet(viewsets.ModelViewSet):
     filterset_class = RecipesFilter
     ordering_fields = ['-id']
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-
     def get_serializer_class(self):
         if self.request.method in ['POST', 'PATCH']:
             return PostRecipesSerializer
         return RecipesSerializer
 
-    def get_permissions_class(self):
-        if self.request.method in ['POST', 'PATCH']:
-            return IsAuthenticated
-        # return AllowAny
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -45,7 +41,6 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ShoppingCartViewSet(CreateDestroyViewSet):
     serializer_class = ShoppingCartSerializer
-    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return self.request.user.shopping_cart.all()
@@ -56,7 +51,6 @@ class ShoppingCartViewSet(CreateDestroyViewSet):
 
 class FavoriteViewSet(CreateDestroyViewSet):
     serializer_class = FavoriteSerializer
-    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return self.request.user.favorite.all()
