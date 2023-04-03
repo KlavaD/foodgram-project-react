@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-
 from backend.settings import FIELD_EMAIL_LENGTH, NAMES_LENGTH
 from users.models import User, Follow
 from users.validators import username_validator
@@ -41,7 +40,10 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('email', 'id', 'username',
                   'first_name', 'last_name', 'is_subscribed'
                   )
+
+
 from api.serializers import RecipesSerializer
+
 
 class FollowSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField(source='author.id')
@@ -72,16 +74,9 @@ class FollowSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Follow
-        fields = (
-            'email',
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'is_subscribed',
-            'recipes',
-            'recipes_count'
-        )
+        fields = ('email', 'id', 'username', 'first_name',
+                  'last_name', 'is_subscribed', 'recipes', 'recipes_count'
+                  )
 
 
 class PostFollowSerializer(serializers.ModelSerializer):
@@ -115,7 +110,6 @@ class PostFollowSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Нельзя подписаться на самого себя')
         return data
-
 
     def to_representation(self, instance):
         return UserSerializer(instance)
