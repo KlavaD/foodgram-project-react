@@ -45,8 +45,11 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ShoppingCartView(APIView):
     def post(self, request, recipe_id):
-        serializer = ShoppingCartSerializer(data=request.data)
         recipe = Recipe.objects.get(id=recipe_id)
+        data = {'user': self.request.user,
+                'recipe': recipe
+                }
+        serializer = ShoppingCartSerializer(data=data)
         if serializer.is_valid():
             serializer.save(user=self.request.user,
                             recipe=recipe)
@@ -54,15 +57,18 @@ class ShoppingCartView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, recipe_id):
-        ShoppingCart.objects.get(id=recipe_id).delete()
+        ShoppingCart.objects.get(recipe_id=recipe_id).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class FavoriteView(APIView):
 
     def post(self, request, recipe_id):
-        serializer = FavoriteSerializer(data=request.data)
-        recipe = Favorite.objects.get(recipe_id=recipe_id)
+        recipe = Recipe.objects.get(id=recipe_id)
+        data = {'user': self.request.user,
+                'recipe': recipe
+                }
+        serializer = FavoriteSerializer(data=data)
         if serializer.is_valid():
             serializer.save(user=self.request.user,
                             recipe=recipe)
