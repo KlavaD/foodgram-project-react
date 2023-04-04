@@ -1,8 +1,9 @@
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets
-from rest_framework.decorators import action
+from rest_framework import viewsets, status
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from api.filters import RecipesFilter
 from api.mixins import CreateDestroyViewSet
@@ -10,11 +11,12 @@ from api.serializers import (TagsSerializer, RecipesSerializer,
                              PostRecipesSerializer, ShoppingCartSerializer,
                              FavoriteSerializer, IngredientsSerializer)
 from recipes.models import (Tag, Recipe, ShoppingCart, Ingredient,
-                            ListOfIngredients)
+                            ListOfIngredients, Favorite)
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
+    pagination_class = None
     serializer_class = TagsSerializer
 
 
@@ -36,27 +38,40 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
+    pagination_class = None
     serializer_class = IngredientsSerializer
+    search_fields = ('^name',)
 
 
-class ShoppingCartViewSet(CreateDestroyViewSet):
-    serializer_class = ShoppingCartSerializer
+class ShoppingCartView(APIView):
+    def post(self, request, recipe_id):
+        serializer = ShoppingCartSerializer(data=request.data)
+        recipe = Recipe.objects.get(id=recipe_id)
+        if serializer.is_valid():
+            serializer.save(user=self.request.user,
+                            recipe=recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def get_queryset(self):
-        return self.request.user.shopping_cart.all()
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    def delete(self, request, recipe_id):
+        ShoppingCart.objects.get(id=recipe_id).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class FavoriteViewSet(CreateDestroyViewSet):
-    serializer_class = FavoriteSerializer
+class FavoriteView(APIView):
 
-    def get_queryset(self):
-        return self.request.user.favorite.all()
+    def post(self, request, recipe_id):
+        serializer = FavoriteSerializer(data=request.data)
+        recipe = Favorite.objects.get(recipe_id=recipe_id)
+        if serializer.is_valid():
+            serializer.save(user=self.request.user,
+                            recipe=recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    def delete(self, request, recipe_id):
+        Favorite.objects.get(recipe_id=recipe_id).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 # class DownloadViewSet():
 #     pass

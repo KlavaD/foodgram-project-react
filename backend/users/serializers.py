@@ -30,10 +30,8 @@ class UserSerializer(serializers.ModelSerializer):
             user = self.context['request'].user
             if user.is_anonymous:
                 return False
-            if Follow.objects.filter(user=user,
-                                     author=obj.id).exists():
-                return True
-            return False
+            return Follow.objects.filter(user=user,
+                                         author=obj.id).exists()
 
     class Meta:
         model = User
@@ -45,38 +43,22 @@ class UserSerializer(serializers.ModelSerializer):
 from api.serializers import RecipesSerializer
 
 
-class FollowSerializer(serializers.ModelSerializer):
-    id = serializers.ReadOnlyField(source='author.id')
-    email = serializers.ReadOnlyField(source='author.email')
-    username = serializers.ReadOnlyField(source='author.username')
-    first_name = serializers.ReadOnlyField(source='author.first_name')
-    last_name = serializers.ReadOnlyField(source='author.last_name')
-    is_subscribed = serializers.SerializerMethodField()
-
+class FollowSerializer(UserSerializer):
     recipes = RecipesSerializer(
         many=True,
         source='author_recipes',
         required=False
     )
+    recipes_count = serializers.SerializerMethodField()
 
-    recipes_count = serializers.IntegerField(default=0)
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields + ('recipes', 'recipes_count')
+        read_only_fields = ('email', 'id', 'username',
+                            'first_name', 'last_name', 'is_subscribed'
+                            )
 
-    def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if request is not None and hasattr(request, "user"):
-            user = self.context['request'].user
-            if user.is_anonymous:
-                return False
-            if Follow.objects.filter(user=user,
-                                     author=obj.id).exists():
-                return True
-            return False
-
-    class Meta:
-        model = Follow
-        fields = ('email', 'id', 'username', 'first_name',
-                  'last_name', 'is_subscribed', 'recipes', 'recipes_count'
-                  )
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
 
 
 class PostFollowSerializer(serializers.ModelSerializer):
@@ -85,16 +67,10 @@ class PostFollowSerializer(serializers.ModelSerializer):
         slug_field='username',
         default=serializers.CurrentUserDefault())
 
-    # author = serializers.SlugRelatedField(
-    #     slug_field='username',
-    #     read_only=True,
-    #     # queryset=User.objects.all(),
-    # )
-
     class Meta:
         fields = '__all__'
         model = Follow
-        read_only_fields = ('author', 'user')
+        read_only_fields = ('author',)
         validators = [
             UniqueTogetherValidator(
                 queryset=Follow.objects.all(),
@@ -104,7 +80,7 @@ class PostFollowSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        author = self.context.get('view').kwargs['user_id']
+        author = self.context.get('request').user.id
         user = self.context['request'].user
         if Follow.objects.filter(author=author, user=user).exists():
             raise serializers.ValidationError(
@@ -112,4 +88,4 @@ class PostFollowSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
-        return UserSerializer(instance)
+        return FollowSerializer(instance)

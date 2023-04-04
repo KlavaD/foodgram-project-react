@@ -10,7 +10,7 @@ SECRET_KEY = 'django-insecure-h9*6l$tj5k2f+gf10s&euquw5^3ky@&7007%0bwb)lic^@hy)u
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -96,7 +96,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 5,
+    'PAGE_SIZE': 6,
 }
 DJOSER = {
     'USER_ID_FIELD': 'id',
@@ -139,6 +139,8 @@ FIELD_EMAIL_LENGTH = 254
 NAMES_LENGTH = 150
 
 AUTH_USER_MODEL = 'users.User'
+
+INTERNAL_IPS = ['127.0.0.1', ]
 
 CORS_URLS_REGEX = r'^/api/.*$'
 

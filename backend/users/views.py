@@ -1,38 +1,42 @@
-from http import HTTPStatus
-
-from django.db.models import Count
-from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
+from rest_framework import status
 from rest_framework.decorators import action
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from users.models import Follow, User
-from users.serializers import PostFollowSerializer, FollowSerializer
+from users.serializers import FollowSerializer, PostFollowSerializer
 
 
 class UserViewSet(UserViewSet):
 
     @action(detail=False, methods=['GET'],
-            url_path='subscriptions',
             permission_classes=[IsAuthenticated],
             serializer_class=FollowSerializer)
     def subscriptions(self, request):
-        following = Follow.objects.filter(user=request.user).annotate(
-            recipes_count=Count('author__recipes'))
-        serializer = self.get_serializer(following, many=True)
-        return Response(serializer.data)
-        # return self.request.user.follower.all()
+        queryset = Follow.objects.filter(user=request.user)
+        queryset = self.paginate_queryset(queryset)
+        serializer = FollowSerializer(
+            queryset, many=True, context={'request': request}
+        )
+        return self.get_paginated_response(serializer.data)
 
-    @action(detail=False, methods=['POST'],
-            url_path=r'(?P<user_id>\d+)/subscribe',
-            permission_classes=[IsAuthenticated],
-            serializer_class=PostFollowSerializer
+    @action(detail=False, url_path=r'(?P<user_id>\d+)/subscribe',
+            permission_classes=[IsAuthenticated], methods=['POST', 'DELETE'],
+            serializer_class=PostFollowSerializer)
+    def subscribe(self, request, user_id):
+        author = User.objects.get(id=user_id)
+        user = self.request.user
+        if request.method == 'POST':
+            serializer = PostFollowSerializer(
+                author, data=request.data, context={'request': request}
             )
-    def subscribe(self, request, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(user=request.user, author=kwargs.get('user_id'))
-        return Response(serializer.data,  status=HTTPStatus.OK)
+            serializer.is_valid(raise_exception=True)
+            Follow.objects.create(user=user, author=author)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if request.method == 'DELETE':
+            Follow.objects.get(user=user, author=author).delete()
+            return Response(request.data, status=status.HTTP_204_NO_CONTENT)
 

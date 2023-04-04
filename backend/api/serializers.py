@@ -137,7 +137,8 @@ class PostRecipesSerializer(serializers.ModelSerializer):
             ListOfIngredients.objects.create(
                 ingredient_id=ingredient.get('id').pk,
                 amount=ingredient['amount'],
-                recipe=recipe)
+                recipe=recipe
+            )
         recipe.tags.set(tags)
         return recipe
 
@@ -155,6 +156,14 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         model = ShoppingCart
         read_only_fields = ('recipe',)
 
+    def validate(self, data):
+        recipe = self.context.get('view').kwargs['recipe_id']
+        user = self.context['request'].user
+        if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
+            raise serializers.ValidationError(
+                'Уже добавлено!')
+        return data
+
 
 class FavoriteSerializer(serializers.ModelSerializer):
     user = serializers.SlugRelatedField(
@@ -165,3 +174,13 @@ class FavoriteSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = Favorite
         read_only_fields = ('recipe',)
+
+    def validate(self, data):
+        if self.context['request'].method != 'POST':
+            return data
+        recipe = self.context.get('view').kwargs['recipe_id']
+        user = self.context['request'].user
+        if Favorite.objects.filter(user=user, recipe=recipe).exists():
+            raise serializers.ValidationError(
+                'Уже добавлено!')
+        return data

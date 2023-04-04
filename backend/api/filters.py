@@ -5,18 +5,23 @@ from recipes.models import Recipe
 
 class RecipesFilter(filters.FilterSet):
     is_favorited = filters.BooleanFilter(
+        field_name='favorite',
         method='filter_favorite'
     )
     is_in_shopping_cart = filters.NumberFilter(
+        field_name='shopping_cart',
         method='filter_shopping_cart'
     )
-    tags = filters.CharFilter(field_name='tag__slug')
+    tags = filters.CharFilter(field_name='tags__slug')
+    author = filters.CharFilter(field_name='author__id')
 
     def filter_favorite(self, queryset, name, value):
-        return queryset.filter(is_favorite__isnull=False)
+        lookup = '__'.join([name, 'isnull'])
+        return queryset.filter(**{lookup: False})
 
     def filter_shopping_cart(self, queryset, name, value):
-        return queryset.filter(is_in_shopping_cart__isnull=False)
+        lookup = '__'.join([name, 'isnull'])
+        return queryset.filter(**{lookup: False})
 
     class Meta:
         model = Recipe
