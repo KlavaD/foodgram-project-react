@@ -147,12 +147,15 @@ class PostRecipesSerializer(serializers.ModelSerializer):
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
-    user = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
-    )
+    # user = serializers.SlugRelatedField(
+    #     read_only=True, slug_field='username'
+    # )
+    name = serializers.ReadOnlyField(source='recipe.name')
+    image = serializers.ReadOnlyField(source='recipe.image')
+    cooking_time = serializers.ReadOnlyField(source='recipe.cooking_time')
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'name','image', 'cooking_time')
         model = ShoppingCart
         read_only_fields = ('recipe',)
 
