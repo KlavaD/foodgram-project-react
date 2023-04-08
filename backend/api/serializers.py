@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from recipes.models import (Tag, Ingredient, Recipe, ShoppingCart, Favorite,
                             ListOfIngredients)
-from users.serializers import UserSerializer
+from users.serializers import CustomUserSerializer
 
 
 class TagsSerializer(serializers.ModelSerializer):
@@ -51,6 +51,17 @@ class PostListOfIngredientsSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+
+            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+
+        return super().to_internal_value(data)
+
+
 class RecipesSerializer(serializers.ModelSerializer):
     tags = TagsSerializer(many=True,
                           read_only=True)
@@ -59,7 +70,8 @@ class RecipesSerializer(serializers.ModelSerializer):
         read_only=True,
         source='recipe_ingredients'
     )
-    author = UserSerializer(read_only=True)
+    author = CustomUserSerializer(read_only=True)
+    image = Base64ImageField(required=False, allow_null=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
@@ -69,10 +81,9 @@ class RecipesSerializer(serializers.ModelSerializer):
             user = self.context['request'].user
             if user.is_anonymous:
                 return False
-            if Favorite.objects.filter(user=user,
-                                       recipe=obj.id).exists():
-                return True
-            return False
+            return Favorite.objects.filter(user=user,
+                                           recipe=obj.id).exists()
+        return False
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
@@ -80,10 +91,9 @@ class RecipesSerializer(serializers.ModelSerializer):
             user = self.context['request'].user
             if user.is_anonymous:
                 return False
-            if ShoppingCart.objects.filter(user=user,
-                                           recipe=obj.id).exists():
-                return True
-            return False
+            return ShoppingCart.objects.filter(user=user,
+                                               recipe=obj.id).exists()
+        return False
 
     class Meta:
         model = Recipe
@@ -98,15 +108,17 @@ class RecipesSerializer(serializers.ModelSerializer):
         )
 
 
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
+class ShortedRecipesSerializer(serializers.ModelSerializer):
+    image = Base64ImageField(required=False, allow_null=True)
 
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-
-        return super().to_internal_value(data)
+    class Meta:
+        model = Recipe
+        fields = (
+            'id', 'name', 'image', 'cooking_time'
+        )
+        read_only_fields = (
+            'id', 'name', 'image', 'cooking_time'
+        )
 
 
 class PostRecipesSerializer(serializers.ModelSerializer):
@@ -147,15 +159,12 @@ class PostRecipesSerializer(serializers.ModelSerializer):
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
-    # user = serializers.SlugRelatedField(
-    #     read_only=True, slug_field='username'
-    # )
     name = serializers.ReadOnlyField(source='recipe.name')
-    image = serializers.ReadOnlyField(source='recipe.image')
+    image = Base64ImageField(required=False, allow_null=True)
     cooking_time = serializers.ReadOnlyField(source='recipe.cooking_time')
 
     class Meta:
-        fields = ('id', 'name','image', 'cooking_time')
+        fields = ('id', 'name', 'image', 'cooking_time')
         model = ShoppingCart
         read_only_fields = ('recipe',)
 

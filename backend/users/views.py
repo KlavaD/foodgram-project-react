@@ -1,21 +1,29 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.pagination import LimitOffsetPagination
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from users.filters import FollowFilter
 from users.models import Follow, User
 from users.serializers import FollowSerializer, PostFollowSerializer
 
 
 class UserViewSet(UserViewSet):
+    # pagination_class = LimitOffsetPagination
+    # filter_backends = (DjangoFilterBackend,)
+    # filterset_class = FollowFilter
+    # ordering_fields = ['-id']
 
     @action(detail=False, methods=['GET'],
-            permission_classes=[IsAuthenticated],
-            serializer_class=FollowSerializer)
+            permission_classes=[IsAuthenticated, ],
+            pagination_class=LimitOffsetPagination
+            )
     def subscriptions(self, request):
-        queryset = Follow.objects.filter(user=request.user)
+        queryset = Follow.objects.filter(user=self.request.user)
         queryset = self.paginate_queryset(queryset)
         serializer = FollowSerializer(
             queryset, many=True, context={'request': request}
@@ -28,15 +36,19 @@ class UserViewSet(UserViewSet):
     def subscribe(self, request, user_id):
         author = User.objects.get(id=user_id)
         user = self.request.user
+        data = {'user': user,
+                'author': author
+                }
         if request.method == 'POST':
             serializer = PostFollowSerializer(
-                author, data=request.data, context={'request': request}
+                data=data, context={'request': request}
             )
-            serializer.is_valid(raise_exception=True)
-            Follow.objects.create(user=user, author=author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            if serializer.is_valid():
+                serializer.save(user=user,
+                                author=author)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         if request.method == 'DELETE':
             Follow.objects.get(user=user, author=author).delete()
             return Response(request.data, status=status.HTTP_204_NO_CONTENT)
-

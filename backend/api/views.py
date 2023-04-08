@@ -16,7 +16,7 @@ from recipes.models import (Tag, Recipe, ShoppingCart, Ingredient,
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
-    pagination_class = None
+    # pagination_class =[None,]
     serializer_class = TagsSerializer
 
 
@@ -76,7 +76,8 @@ class FavoriteView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, recipe_id):
-        Favorite.objects.get(recipe_id=recipe_id).delete()
+        Favorite.objects.get(recipe_id=recipe_id,
+                             user=self.request.user).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 # class DownloadViewSet():
