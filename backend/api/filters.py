@@ -16,12 +16,12 @@ class RecipesFilter(filters.FilterSet):
     author = filters.CharFilter(field_name='author__id')
 
     def filter_favorite(self, queryset, name, value):
-        lookup = '__'.join([name, 'isnull'])
-        return queryset.filter(**{lookup: False})
+        queryset.filter(favorite__isnull=False,
+                        favorite__user=self.request.user)
 
     def filter_shopping_cart(self, queryset, name, value):
-        lookup = '__'.join([name, 'isnull'])
-        return queryset.filter(**{lookup: False})
+        return queryset.filter(shopping_cart__isnull=False,
+                               shopping_cart__user=self.request.user)
 
     class Meta:
         model = Recipe
