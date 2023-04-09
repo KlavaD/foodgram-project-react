@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from backend.settings import FIELD_EMAIL_LENGTH, NAMES_LENGTH
+from recipes.models import Recipe
 from users.models import User, Follow
 from users.validators import username_validator
 
@@ -60,14 +61,21 @@ class FollowSerializer(CustomUserSerializer):
             return Follow.objects.filter(user=user,
                                          author=obj.id).exists()
 
-    recipes = ShortedRecipesSerializer(many=True,
-                                       read_only=True,
-                                       source='author.recipes.all')
+    recipes = serializers.SerializerMethodField()
+    # recipes = ShortedRecipesSerializer(many=True,
+    #                                    read_only=True,
+    #                                    source='author.recipes.all',
+    #                                    )
     recipes_count = serializers.SerializerMethodField()
 
     class Meta(CustomUserSerializer.Meta):
         fields = CustomUserSerializer.Meta.fields + ('recipes', 'recipes_count')
         read_only_fields = ('recipes',)
+
+    def get_recipes(self, obj):
+        # recipes_limit = self.context['recipes_limit']
+        data = Recipe.objects.filter(author=obj.author)[:3]
+        return ShortedRecipesSerializer(data)
 
     def get_recipes_count(self, obj):
         return obj.author.recipes.count()

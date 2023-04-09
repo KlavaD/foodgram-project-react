@@ -24,7 +24,7 @@ class RecipeAdmin(admin.ModelAdmin):
         return obj.favorite.count()
 
     list_display = (
-        'pk', 'name', 'cooking_time',
+        'pk', 'name', 'cooking_time', 'author',
         'ingredients_list', 'favorite_counts', 'tags_list', 'image'
     )
     search_fields = ('name', 'cooking_time',)
