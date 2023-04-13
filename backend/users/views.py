@@ -1,9 +1,8 @@
-from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
-
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -12,10 +11,6 @@ from users.serializers import FollowSerializer, PostFollowSerializer
 
 
 class UserViewSet(UserViewSet):
-    # pagination_class = LimitOffsetPagination
-    # filter_backends = (DjangoFilterBackend,)
-    # filterset_class = FollowFilter
-    # ordering_fields = ['-id']
 
     @action(detail=False, methods=['GET'],
             permission_classes=[IsAuthenticated, ],
@@ -33,7 +28,7 @@ class UserViewSet(UserViewSet):
             permission_classes=[IsAuthenticated], methods=['POST', 'DELETE'],
             serializer_class=PostFollowSerializer)
     def subscribe(self, request, user_id):
-        author = User.objects.get(id=user_id)
+        author = get_object_or_404(User, id=user_id)
         user = self.request.user
         data = {'user': user,
                 'author': author
@@ -49,5 +44,8 @@ class UserViewSet(UserViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         if request.method == 'DELETE':
-            Follow.objects.get(user=user, author=author).delete()
-            return Response(request.data, status=status.HTTP_204_NO_CONTENT)
+            try:
+                Follow.objects.get(user=user, author=author).delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            except:
+                return Response(status=status.HTTP_400_BAD_REQUEST)

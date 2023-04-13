@@ -1,4 +1,3 @@
-from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status
 from rest_framework.pagination import LimitOffsetPagination
@@ -16,7 +15,7 @@ from recipes.models import (Tag, Recipe, ShoppingCart, Ingredient,
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
-    # pagination_class =[None,]
+    pagination_class = None
     serializer_class = TagsSerializer
 
 
@@ -32,8 +31,8 @@ class RecipesViewSet(viewsets.ModelViewSet):
             return PostRecipesSerializer
         return RecipesSerializer
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+    # def perform_create(self, serializer):
+    #     serializer.save(author=self.request.user)
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
