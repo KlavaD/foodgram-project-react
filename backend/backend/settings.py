@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'djoser',
     'corsheaders',
     'django_filters',
+    'drf_pdf',
     'users.apps.UserConfig',
     'recipes.apps.RecipesConfig',
     'api.apps.ApiConfig',
@@ -97,6 +98,9 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 6,
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ),
 }
 DJOSER = {
     'USER_ID_FIELD': 'id',

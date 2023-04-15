@@ -1,16 +1,18 @@
+from django.db.models import Sum
+from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_pdf.response import PDFResponse, PDFFileResponse
+from drf_pdf.renderer import PDFRenderer
 
-from api.filters import RecipesFilter
-from api.mixins import CreateDestroyViewSet
+from api.filters import RecipesFilter, IngredientsFilter
 from api.serializers import (TagsSerializer, RecipesSerializer,
                              PostRecipesSerializer, ShoppingCartSerializer,
                              FavoriteSerializer, IngredientsSerializer)
 from recipes.models import (Tag, Recipe, ShoppingCart, Ingredient,
-                            ListOfIngredients, Favorite)
+                            Favorite)
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -21,7 +23,6 @@ class TagsViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipesFilter
     ordering_fields = ['-id']
@@ -31,15 +32,13 @@ class RecipesViewSet(viewsets.ModelViewSet):
             return PostRecipesSerializer
         return RecipesSerializer
 
-    # def perform_create(self, serializer):
-    #     serializer.save(author=self.request.user)
-
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     pagination_class = None
     serializer_class = IngredientsSerializer
-    search_fields = ('^name',)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientsFilter
 
 
 class ShoppingCartView(APIView):
@@ -79,5 +78,32 @@ class FavoriteView(APIView):
                              user=self.request.user).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-# class DownloadViewSet():
-#     pass
+
+class DownloadShopList(APIView):
+
+    def get(self, request):
+        shop_list = ShoppingCart.objects.filter(
+            user=request.user
+        ).values(
+            'recipe__ingredients__name',
+            'recipe__recipe_ingredients__amount',
+            'recipe__ingredients__measurement_unit'
+        ).annotate(amount=Sum('recipe__recipe_ingredients__amount')).order_by(
+            'recipe__ingredients__name'
+        )
+        data = []
+
+        for item in shop_list:
+            data.append(
+                f'{item["recipe__ingredients__name"]}-'
+                f'{item["recipe__recipe_ingredients__amount"]}\t'
+                f'{item["recipe__ingredients__measurement_unit"]} \n')
+        response = HttpResponse(
+            data,
+            headers={
+                'content-type': 'text/plain',
+                'Content-Disposition': 'attachment; filename="shopping_cart.txt'
+            },
+            status=status.HTTP_200_OK
+        )
+        return response

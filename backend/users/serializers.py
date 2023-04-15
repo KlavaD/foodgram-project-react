@@ -1,6 +1,8 @@
-from rest_framework import serializers
+from rest_framework import serializers, pagination
+from rest_framework.response import Response
 
 from backend.settings import FIELD_EMAIL_LENGTH, NAMES_LENGTH
+from recipes.models import Recipe
 from users.models import User, Follow
 from users.validators import username_validator
 
@@ -53,28 +55,29 @@ class FollowSerializer(CustomUserSerializer):
                 return True
             return False
 
-    # recipes = serializers.SerializerMethodField()
-    recipes = ShortedRecipesSerializer(many=True,
-                                       read_only=True,
-                                       source='author.recipes.all',
-                                       )
+    recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
     class Meta(CustomUserSerializer.Meta):
         fields = CustomUserSerializer.Meta.fields + ('recipes', 'recipes_count')
         read_only_fields = ('recipes',)
 
-    # def get_recipes(self, obj):
-    #     # recipes_limit = self.context['recipes_limit']
-    #     data = Recipe.objects.filter(author=obj.author)
-    #     return ShortedRecipesSerializer(data, many=True, read_only=True)
+    def get_recipes(self, obj):
+        paginator = pagination.PageNumberPagination()
+        paginator.page_size = self.context.get(
+            'request').query_params.get('recipes_limit')
+
+        data = Recipe.objects.filter(author=obj.author)
+        if not data:
+            return None
+        page = paginator.paginate_queryset(data, self.context.get('request'))
+        return ShortedRecipesSerializer(page, many=True).data
 
     def get_recipes_count(self, obj):
         return obj.author.recipes.count()
 
 
 class PostFollowSerializer(serializers.ModelSerializer):
-
     class Meta:
         fields = ('author', 'user')
         model = Follow
@@ -93,4 +96,6 @@ class PostFollowSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return FollowSerializer(instance,
-                                context={'request': self.context.get('request')})
+                                context={
+                                    'request': self.context.get('request')}
+                                ).data

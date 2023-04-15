@@ -65,15 +65,17 @@ class Base64ImageField(serializers.ImageField):
 class RecipesSerializer(serializers.ModelSerializer):
     tags = TagsSerializer(many=True,
                           read_only=True)
-    ingredients = ListOfIngredientsSerializer(
-        many=True,
-        read_only=True,
-        source='recipe_ingredients'
-    )
+    ingredients = serializers.SerializerMethodField()
     author = CustomUserSerializer(read_only=True)
     image = Base64ImageField(required=False, allow_null=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
+
+    def get_ingredients(self, obj):
+        data = ListOfIngredients.objects.filter(recipe=obj)
+        if not data:
+            return None
+        return ListOfIngredientsSerializer(data, many=True).data
 
     def get_is_favorited(self, obj):
         request = self.context.get('request')
@@ -104,23 +106,14 @@ class RecipesSerializer(serializers.ModelSerializer):
             "is_favorited", "is_in_shopping_cart",
             'name', 'image', 'text', 'cooking_time'
         )
-        read_only_fields = (
-            'id', 'tags', 'author', 'ingredients',
-            'name', 'image', 'text', 'cooking_time'
-        )
 
 
 class ShortedRecipesSerializer(RecipesSerializer):
-    # image = Base64ImageField(required=False, allow_null=True)
-
     class Meta:
         model = Recipe
         fields = (
             'id', 'name', 'image', 'cooking_time'
         )
-        # read_only_fields = (
-        #     'id', 'name', 'image', 'cooking_time'
-        # )
 
 
 class PostRecipesSerializer(serializers.ModelSerializer):
@@ -141,17 +134,31 @@ class PostRecipesSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('author',)
 
+    def create_ingredients_for_recipe(self, ingredients, recipe):
+        for ingredient in ingredients:
+            if ListOfIngredients.objects.filter(
+                    ingredient_id=ingredient.get('id').pk,
+                    recipe=recipe).exists():
+                our_ingredient = ListOfIngredients.objects.get(
+                    ingredient_id=ingredient.get('id').pk,
+                    recipe=recipe)
+                amount = our_ingredient.amount
+                amount += ingredient['amount']
+                our_ingredient.amount = amount
+                our_ingredient.save()
+            else:
+                ListOfIngredients.objects.create(
+                    ingredient_id=ingredient.get('id').pk,
+                    amount=ingredient['amount'],
+                    recipe=recipe
+                )
+
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data,
                                        author=self.context['request'].user)
-        for ingredient in ingredients:
-            ListOfIngredients.objects.create(
-                ingredient_id=ingredient.get('id').pk,
-                amount=ingredient['amount'],
-                recipe=recipe
-            )
+        self.create_ingredients_for_recipe(ingredients, recipe)
         recipe.tags.set(tags)
         return recipe
 
@@ -163,23 +170,21 @@ class PostRecipesSerializer(serializers.ModelSerializer):
         instance.name = validated_data.get('name')
         instance.image = validated_data.get('image', instance.image)
         instance.text = validated_data.get('text', instance.text)
-        instance.cooking_time = validated_data.get('cooking_time', instance.cooking_time)
+        instance.cooking_time = validated_data.get('cooking_time',
+                                                   instance.cooking_time)
         ListOfIngredients.objects.filter(
             recipe=instance
         ).delete()
-        for ingredient in ingredients:
-            ListOfIngredients.objects.create(
-                ingredient_id=ingredient.get('id').pk,
-                amount=ingredient['amount'],
-                recipe=instance
-            )
+        self.create_ingredients_for_recipe(ingredients, instance)
         instance.tags.set(tags)
         instance.save()
         return instance
 
     def to_representation(self, instance):
-        return RecipesSerializer(instance,
-                                 context={'request': self.context.get('request')})
+        return RecipesSerializer(
+            instance,
+            context={'request': self.context.get('request')}
+        ).data
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
@@ -192,31 +197,15 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         model = ShoppingCart
         read_only_fields = ('recipe',)
 
-    # def validate(self, data):
-    #     recipe = self.context.get('view').kwargs['recipe_id']
-    #     user = self.context['request'].user
-    #     if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
-    #         raise serializers.ValidationError(
-    #             'Уже добавлено!')
-    #     return data
+    def validate(self, data):
+        recipe = self.initial_data.get('recipe')
+        user = self.initial_data.get('user')
+        if self.Meta.model.objects.filter(user=user, recipe=recipe).exists():
+            raise serializers.ValidationError(
+                'Уже добавлено!')
+        return data
 
 
-class FavoriteSerializer(serializers.ModelSerializer):
-    user = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
-    )
-
-    class Meta:
-        fields = '__all__'
+class FavoriteSerializer(ShoppingCartSerializer):
+    class Meta(ShoppingCartSerializer.Meta):
         model = Favorite
-        read_only_fields = ('recipe',)
-
-    # def validate(self, data):
-    #     if self.context['request'].method != 'POST':
-    #         return data
-    #     recipe = self.context.get('view').kwargs['recipe_id']
-    #     user = self.context['request'].user
-    #     if Favorite.objects.filter(user=user, recipe=recipe).exists():
-    #         raise serializers.ValidationError(
-    #             'Уже добавлено!')
-    #     return data
