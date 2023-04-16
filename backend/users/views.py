@@ -37,15 +37,11 @@ class UserViewSet(UserViewSet):
             serializer = PostFollowSerializer(
                 data=data, context={'request': request}
             )
-            if serializer.is_valid():
-                serializer.save(user=user,
-                                author=author)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=user,
+                            author=author)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            Follow.objects.get_object_or_404(user=user, author=author).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
-        if request.method == 'DELETE':
-            try:
-                Follow.objects.get(user=user, author=author).delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            except:
-                return Response(status=status.HTTP_400_BAD_REQUEST)

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.db.models import Count
+
 
 from .models import (Tag, Ingredient, Recipe, TagsRecipes, ListOfIngredients,
                      ShoppingCart, Favorite)
@@ -24,7 +24,7 @@ class RecipeAdmin(admin.ModelAdmin):
         return obj.favorite.count()
 
     list_display = (
-        'pk', 'name', 'author',
+        'name', 'pk', 'author',
         'ingredients_list', 'favorite_counts', 'tags_list',
         'cooking_time', 'image'
     )
@@ -44,7 +44,7 @@ class TagAdmin(admin.ModelAdmin):
 
 
 class IngredientAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'name', 'measurement_unit')
+    list_display = ('name', 'pk', 'measurement_unit')
     search_fields = ('name',)
     list_filter = ('measurement_unit',)
     empty_value_display = '-пусто-'

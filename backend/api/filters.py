@@ -13,7 +13,6 @@ class RecipesFilter(filters.FilterSet):
         method='filter_shopping_cart'
     )
     tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
-    author = filters.CharFilter(field_name='author__id')
 
     def filter_favorite(self, queryset, name, value):
         return queryset.filter(favorite__isnull=False,

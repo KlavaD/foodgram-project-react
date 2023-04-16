@@ -1,16 +1,20 @@
 import os
+from dotenv import load_dotenv
+
 from datetime import timedelta
 from pathlib import Path
 
-import rest_framework.permissions
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-h9*6l$tj5k2f+gf10s&euquw5^3ky@&7007%0bwb)lic^@hy)u'
+load_dotenv()
 
-DEBUG = True
+SECRET_KEY = os.getenv(
+    'SECRET_KEY',
+    default='django-insecure-h9*6l$tj5k2f+gf10s&euquw5^3ky@&7007%0bwb)lic^@hy)u')
 
-ALLOWED_HOSTS = ['*']
+DEBUG = os.getenv('DEBUG', default=False)
+
+ALLOWED_HOSTS = os.getenv('HOSTS', default='*')
 
 # Application definition
 
@@ -26,7 +30,6 @@ INSTALLED_APPS = [
     'djoser',
     'corsheaders',
     'django_filters',
-    'drf_pdf',
     'users.apps.UserConfig',
     'recipes.apps.RecipesConfig',
     'api.apps.ApiConfig',
@@ -65,12 +68,26 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 # Database
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+BD_PROD = os.getenv('DB_PROD', default=False) == 'True'
+if not BD_PROD:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': os.getenv(
+                'DB_ENGINE', default='django.db.backends.postgresql'),
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('POSTGRES_USER'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+            'HOST': os.getenv('DB_HOST'),
+            'PORT': os.getenv('DB_PORT')
+        }
+    }
 
 # Password validation
 
@@ -130,6 +147,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -139,6 +158,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 FIELD_TEXT_LENGTH = 200
 
 FIELD_EMAIL_LENGTH = 254
+
+FIELD_COLOR_LENGTH = 7
 
 NAMES_LENGTH = 150
 

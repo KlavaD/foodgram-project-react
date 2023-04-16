@@ -8,12 +8,31 @@ def import_ingredients():
         reader = csv.reader(csvfile)
         id = 0
         try:
-            for row in reader:
-                data = Ingredient(id=id,
-                                  name=row[0],
-                                  measurement_unit=row[1])
-                id += 1
-                data.save()
+            for name, m_unit in reader:
+                data, status = Ingredient.objects.get_or_create(
+                    name=name,
+                    measurement_unit=m_unit)
+                id += status
+                if id % 100 == 0:
+                    print('ингредиенты загружаются, ждите')
+
         except Exception as error:
             raise ImportError(
                 f'При импорте произошла ошибка {error}')
+
+# def create_tags():
+#     tags={
+#
+#     }
+#         try:
+#             for name, m_unit in reader:
+#                 data, status = Ingredient.objects.get_or_create(
+#                     name=name,
+#                     measurement_unit=m_unit)
+#                 id += status
+#                 if id % 100 == 0:
+#                     print('ингредиенты загружаются, ждите')
+#
+#         except Exception as error:
+#             raise ImportError(
+#                 f'При импорте произошла ошибка {error}')
