@@ -5,7 +5,6 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from api.filters import RecipesFilter, IngredientsFilter
 from api.serializers import (TagsSerializer, RecipesSerializer,
@@ -21,7 +20,12 @@ def create(serializer, request, recipe_id):
         'user': request.user,
         'recipe': recipe
     }
-    serializer_data = serializer(data=data)
+    serializer_data = serializer(
+        data=data,
+        context={
+            'request': request
+        }
+    )
     serializer_data.is_valid(raise_exception=True)
     serializer_data.save(user=request.user,
                          recipe=recipe)
@@ -111,5 +115,3 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientsSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientsFilter
-
-

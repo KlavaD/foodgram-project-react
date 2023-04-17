@@ -42,6 +42,6 @@ class UserViewSet(UserViewSet):
                             author=author)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            Follow.objects.get_object_or_404(user=user, author=author).delete()
+            get_object_or_404(Follow, user=user, author=author).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 

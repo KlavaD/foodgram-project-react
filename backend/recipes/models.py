@@ -60,7 +60,7 @@ class Ingredient(models.Model):
 class Recipe(models.Model):
     tags = models.ManyToManyField(
         Tag,
-        null=False,
+        blank=False,
         through='TagsRecipes',
         verbose_name='Тэги',
     )
@@ -72,8 +72,8 @@ class Recipe(models.Model):
     )
     name = models.CharField(
         max_length=settings.FIELD_TEXT_LENGTH,
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
         verbose_name='Название рецепта'
     )
     image = models.ImageField(
@@ -83,21 +83,19 @@ class Recipe(models.Model):
     )
     text = models.CharField(
         max_length=settings.FIELD_TEXT_LENGTH,
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
         verbose_name='Описание рецепта'
     )
     ingredients = models.ManyToManyField(
         Ingredient,
-        null=False,
         through='ListOfIngredients',
         verbose_name='Ингредиенты',
-        blank=True
     )
     cooking_time = models.PositiveSmallIntegerField(
-        verbose_name='Время приготовления(мин)',
-        blank=True,
-        null=True,
+        verbose_name='t',
+        blank=False,
+        null=False,
         validators=[positive_validator]
     )
     pub_date = models.DateTimeField(
@@ -117,12 +115,16 @@ class Recipe(models.Model):
 class ListOfIngredients(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
+        blank=False,
+        null=False,
         on_delete=models.CASCADE,
         verbose_name='Наименование ингредиента',
         related_name='recipe_ingredients'
     )
     amount = models.PositiveSmallIntegerField(
         verbose_name='Количество',
+        blank=False,
+        null=False,
         validators=[positive_validator]
     )
     recipe = models.ForeignKey(
@@ -143,7 +145,12 @@ class ListOfIngredients(models.Model):
 
 
 class TagsRecipes(models.Model):
-    tags = models.ForeignKey(Tag, on_delete=models.CASCADE)
+    tags = models.ForeignKey(
+        Tag,
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE
+    )
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
 
     class Meta:

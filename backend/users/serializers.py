@@ -30,7 +30,12 @@ class CustomUserSerializer(serializers.ModelSerializer):
         )
 
 
-from api.serializers import ShortedRecipesSerializer
+class ShortedRecipesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = (
+            'id', 'name', 'image', 'cooking_time'
+        )
 
 
 class FollowSerializer(CustomUserSerializer):
@@ -57,14 +62,11 @@ class FollowSerializer(CustomUserSerializer):
         )
 
     def get_recipes(self, obj):
-        # paginator = pagination.PageNumberPagination()
         recipes_limit = self.context.get(
             'request').query_params.get('recipes_limit')
-
         data = Recipe.objects.filter(author=obj.author)
         if recipes_limit:
-            data = data[:recipes_limit]
-        # page = paginator.paginate_queryset(data, self.context.get('request'))
+            data = data[:int(recipes_limit)]
         return ShortedRecipesSerializer(data, many=True).data
 
     def get_recipes_count(self, obj):

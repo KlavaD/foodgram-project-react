@@ -1,6 +1,6 @@
 import csv
 
-from recipes.models import Ingredient
+from recipes.models import Ingredient, Tag
 
 
 def import_ingredients():
@@ -20,19 +20,26 @@ def import_ingredients():
             raise ImportError(
                 f'При импорте произошла ошибка {error}')
 
-# def create_tags():
-#     tags={
-#
-#     }
-#         try:
-#             for name, m_unit in reader:
-#                 data, status = Ingredient.objects.get_or_create(
-#                     name=name,
-#                     measurement_unit=m_unit)
-#                 id += status
-#                 if id % 100 == 0:
-#                     print('ингредиенты загружаются, ждите')
-#
-#         except Exception as error:
-#             raise ImportError(
-#                 f'При импорте произошла ошибка {error}')
+
+def create_tags():
+    tags = (
+        ('завтрак', 'breakfast', '#c9eb34'),
+        ('обед', 'lunch', '#c034eb'),
+        ('ужин', 'dinner', '#ebd334'),
+        ('десерт', 'desert', '#34dceb'),
+    )
+    try:
+        with open('data/tags.csv', encoding='utf-8') as csvfile:
+            tags = csv.reader(csvfile)
+    except:
+        try:
+            for name, slug, color in tags:
+                data, status = Tag.objects.get_or_create(
+                    name=name,
+                    slug=slug,
+                    color=color
+                )
+            print('Тэги созданы!')
+        except Exception as error:
+            raise ImportError(
+                f'При импорте произошла ошибка {error}')
