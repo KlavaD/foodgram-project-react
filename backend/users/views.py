@@ -14,8 +14,7 @@ class UserViewSet(UserViewSet):
 
     @action(detail=False, methods=['GET'],
             permission_classes=[IsAuthenticated, ],
-            pagination_class=LimitOffsetPagination
-            )
+            pagination_class=LimitOffsetPagination)
     def subscriptions(self, request):
         queryset = Follow.objects.filter(user=self.request.user)
         queryset = self.paginate_queryset(queryset)
@@ -30,9 +29,10 @@ class UserViewSet(UserViewSet):
     def subscribe(self, request, user_id):
         author = get_object_or_404(User, id=user_id)
         user = self.request.user
-        data = {'user': user,
-                'author': author
-                }
+        data = {
+            'user': user,
+            'author': author
+        }
         if request.method == 'POST':
             serializer = PostFollowSerializer(
                 data=data, context={'request': request}
@@ -41,6 +41,5 @@ class UserViewSet(UserViewSet):
             serializer.save(user=user,
                             author=author)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            get_object_or_404(Follow, user=user, author=author).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        get_object_or_404(Follow, user=user, author=author).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

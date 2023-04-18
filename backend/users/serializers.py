@@ -16,17 +16,17 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'id', 'username',
-                  'first_name', 'last_name', 'is_subscribed'
-                  )
+        fields = (
+            'email', 'id', 'username',
+            'first_name', 'last_name', 'is_subscribed'
+        )
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        user = request.user
         return (
-                request and not user.is_anonymous
+                request and request.user.is_authenticated
                 and
-                obj.author.filter(user=user).exists()
+                obj.author.filter(user=request.user).exists()
         )
 
 
@@ -54,11 +54,10 @@ class FollowSerializer(CustomUserSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        user = request.user
         return (
-                request and not user.is_anonymous
+                request and not request.user.is_authenticated
                 and
-                obj.user == user
+                obj.user == request.user
         )
 
     def get_recipes(self, obj):
@@ -91,7 +90,6 @@ class PostFollowSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
-        return FollowSerializer(instance,
-                                context={
-                                    'request': self.context.get('request')}
-                                ).data
+        return FollowSerializer(
+            instance, context={'request': self.context.get('request')}
+        ).data

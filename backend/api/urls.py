@@ -9,7 +9,7 @@ router_v1.register(r'recipes', RecipesViewSet, basename='recipes')
 router_v1.register(r'ingredients', IngredientsViewSet, basename='ingredients')
 
 urlpatterns = [
-
+    path('auth/', include('djoser.urls.authtoken')),
     path('', include(router_v1.urls)),
 
 ]

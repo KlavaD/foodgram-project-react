@@ -1,8 +1,8 @@
 from django.conf import settings
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
 
-from recipes.validators import positive_validator
 from users.models import User
 
 
@@ -93,10 +93,10 @@ class Recipe(models.Model):
         verbose_name='Ингредиенты',
     )
     cooking_time = models.PositiveSmallIntegerField(
-        verbose_name='t',
+        verbose_name='Время приготовления',
         blank=False,
         null=False,
-        validators=[positive_validator]
+        validators=[MinValueValidator(1)]
     )
     pub_date = models.DateTimeField(
         verbose_name='Дата создания',
@@ -125,7 +125,7 @@ class ListOfIngredients(models.Model):
         verbose_name='Количество',
         blank=False,
         null=False,
-        validators=[positive_validator]
+        validators=[MinValueValidator(1)]
     )
     recipe = models.ForeignKey(
         Recipe,
@@ -140,8 +140,8 @@ class ListOfIngredients(models.Model):
         verbose_name_plural = 'Списки Ингредиентов'
 
     def __str__(self) -> str:
-        return f'({self.ingredient.name}-{self.amount}' \
-               f'({self.ingredient.measurement_unit})'
+        return (f'({self.ingredient.name}-{self.amount}'
+                f'({self.ingredient.measurement_unit})')
 
 
 class TagsRecipes(models.Model):
