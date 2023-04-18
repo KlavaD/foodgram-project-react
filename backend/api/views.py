@@ -1,7 +1,12 @@
+import io
+
 from django.conf import settings
 from django.db.models import Sum
-from django.http import HttpResponse
+from django.http import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -82,6 +87,10 @@ class RecipesViewSet(viewsets.ModelViewSet):
             methods=['GET'],
             permission_classes=[IsAuthenticated, ])
     def download_shopping_cart(self, request):
+        buffer = io.BytesIO()
+        p = canvas.Canvas(buffer)
+        pdfmetrics.registerFont(TTFont('FreeSans', 'FreeSans.ttf'))
+        p.setFont('FreeSans', 28)
         shop_list = ListOfIngredients.objects.filter(
             recipe__shopping_cart__user=request.user
         ).values(
@@ -92,19 +101,30 @@ class RecipesViewSet(viewsets.ModelViewSet):
         ).order_by(
             'ingredient__name'
         )
-        data = []
-
-        for item in shop_list:
-            data.append(
-                f'{item["ingredient__name"]}-'
-                f'{item["amount_all"]}\t'
-                f'{item["ingredient__measurement_unit"]} \n')
-        response = HttpResponse(
-            data,
-            headers=settings.HEADERS,
-            status=status.HTTP_200_OK
+        height = settings.HEIGHT
+        p.drawString(
+            settings.LEFT,
+            height + 50,
+            'Нужно купить:'
         )
-        return response
+        p.line(80, 740, 550, 740)
+        for item in shop_list:
+            p.drawString(
+                settings.LEFT,
+                height,
+                f'{item["ingredient__name"]}-'
+                f'{item["amount_all"]}'
+                f'{item["ingredient__measurement_unit"]}'
+            )
+            height -= 40
+        p.showPage()
+        p.save()
+        buffer.seek(0)
+        return FileResponse(
+            buffer,
+            as_attachment=True,
+            filename='shopping_cart.pdf'
+        )
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):

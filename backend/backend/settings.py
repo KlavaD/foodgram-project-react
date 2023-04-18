@@ -1,8 +1,8 @@
 import os
-from dotenv import load_dotenv
-
 from datetime import timedelta
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -177,3 +177,7 @@ HEADERS = {
     'content-type': 'text/plain',
     'Content-Disposition': 'attachment; filename="shopping_cart.txt'
 }
+
+HEIGHT = 700
+
+LEFT = 100
