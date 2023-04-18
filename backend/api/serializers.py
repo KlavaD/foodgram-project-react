@@ -62,20 +62,18 @@ class RecipesSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         request = self.context.get('request')
-        user = request.user
         return (
-                request and not user.is_anonymous
+                request and request.user.is_authenticated
                 and
-                obj.favorite.filter(user=user).exists()
+                obj.favorite.filter(user=request.user).exists()
         )
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
-        user = request.user
         return (
-                request and not user.is_anonymous
+                request and request.user.is_authenticated
                 and
-                obj.shopping_cart.filter(user=user).exists()
+                obj.shopping_cart.filter(user=request.user).exists()
         )
 
     class Meta:
@@ -95,7 +93,7 @@ class PostRecipesSerializer(serializers.ModelSerializer):
     )
     ingredients = PostListOfIngredientsSerializer(many=True)
     image = Base64ImageField(required=False, allow_null=True)
-    cooking_time = serializers.IntegerField(min_value=1)
+    cooking_time = serializers.IntegerField()
 
     class Meta:
         model = Recipe
@@ -134,28 +132,35 @@ class PostRecipesSerializer(serializers.ModelSerializer):
             raise ValidationError('Исправлять может только автор')
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        super().update(instance, validated_data)
         ListOfIngredients.objects.filter(
             recipe=instance
         ).delete()
         self.create_ingredients_for_recipe(ingredients, instance)
         instance.tags.set(tags)
-        instance.save()
-        return instance
+        return super().update(instance, validated_data)
 
     def validate(self, data):
+        errors = []
+        if self.initial_data.get('cooking_time') < 1:
+            errors.append('Время приготовления должно быть больше 0')
         ingredients = self.initial_data.get('ingredients')
+        if not ingredients:
+            errors.append('Нет ингредиентов')
         tags = self.initial_data.get('tags')
+        if not tags:
+            errors.append('Нет тэгов')
         list_ingredients_id = []
         for ingredient in ingredients:
             if int(ingredient['amount']) < 1:
-                raise ValidationError('Количество должно быть больше 1')
+                errors.append('Количество должно быть больше 1')
             if ingredient['id'] in list_ingredients_id:
-                raise ValidationError('Ингредиенты не уникальны')
+                errors.append('Ингредиенты не уникальны')
             list_ingredients_id.append(ingredient['id'])
         for tag in tags:
             if tags.count(tag) > 1:
-                raise ValidationError('Тэги не уникальны')
+                errors.append('Тэги не уникальны')
+        if errors:
+            raise ValidationError(errors)
         return data
 
     def to_representation(self, instance):
