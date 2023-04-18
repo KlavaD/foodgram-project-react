@@ -15,7 +15,7 @@ class UserAdmin(BaseUserAdmin):
         return obj.follower.count()
 
     list_display = (
-         'username', 'pk', 'email', 'first_name', 'last_name',
+        'username', 'pk', 'email', 'first_name', 'last_name',
         'count_recipes', 'count_followers'
     )
     search_fields = ('username', 'email',)

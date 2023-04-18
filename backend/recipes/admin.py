@@ -16,12 +16,15 @@ class TagsRecipesAdmin(admin.TabularInline):
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
+    @admin.display(description='тэги')
     def tags_list(self, obj):
         return list(tag for tag in obj.tags.all())
 
+    @admin.display(description='ингредиенты')
     def ingredients_list(self, obj):
         return list(ingredient for ingredient in obj.ingredients.all())
 
+    @admin.display(description='В избранном')
     def favorite_counts(self, obj):
         return obj.favorite.count()
 
@@ -34,10 +37,6 @@ class RecipeAdmin(admin.ModelAdmin):
     list_filter = ('author',)
     inlines = [ListOfIngredientsAdmin,
                TagsRecipesAdmin]
-
-    tags_list.short_description = 'Теги'
-    ingredients_list.short_description = 'Ингредиенты'
-    favorite_counts.short_description = 'В избранном'
 
 
 @admin.register(Tag)

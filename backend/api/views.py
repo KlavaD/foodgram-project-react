@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db.models import Sum
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
@@ -100,10 +101,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 f'{item["ingredient__measurement_unit"]} \n')
         response = HttpResponse(
             data,
-            headers={
-                'content-type': 'text/plain',
-                'Content-Disposition': 'attachment; filename="shopping_cart.txt'
-            },
+            headers=settings.HEADERS,
             status=status.HTTP_200_OK
         )
         return response

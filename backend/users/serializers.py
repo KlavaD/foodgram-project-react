@@ -1,5 +1,5 @@
 from django.conf import settings
-from rest_framework import serializers, pagination
+from rest_framework import serializers
 
 from recipes.models import Recipe
 from users.models import User, Follow
@@ -26,7 +26,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         return (
                 request and not user.is_anonymous
                 and
-                Follow.objects.filter(user=user, author=obj.id).exists()
+                obj.author.filter(user=user).exists()
         )
 
 
@@ -58,13 +58,13 @@ class FollowSerializer(CustomUserSerializer):
         return (
                 request and not user.is_anonymous
                 and
-                Follow.objects.filter(user=user, author=obj.id).exists()
+                obj.user == user
         )
 
     def get_recipes(self, obj):
         recipes_limit = self.context.get(
             'request').query_params.get('recipes_limit')
-        data = Recipe.objects.filter(author=obj.author)
+        data = obj.author.recipes.all()
         if recipes_limit:
             data = data[:int(recipes_limit)]
         return ShortedRecipesSerializer(data, many=True).data

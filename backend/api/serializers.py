@@ -1,7 +1,6 @@
 from operator import attrgetter
 
 from drf_extra_fields.fields import Base64ImageField
-
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -132,14 +131,10 @@ class PostRecipesSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         if instance.author != self.context['request'].user:
-            raise serializers.ValidationError
+            raise ValidationError('Исправлять может только автор')
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        instance.name = validated_data.get('name')
-        instance.image = validated_data.get('image', instance.image)
-        instance.text = validated_data.get('text', instance.text)
-        instance.cooking_time = validated_data.get('cooking_time',
-                                                   instance.cooking_time)
+        super().update(instance, validated_data)
         ListOfIngredients.objects.filter(
             recipe=instance
         ).delete()
@@ -150,6 +145,7 @@ class PostRecipesSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         ingredients = self.initial_data.get('ingredients')
+        tags = self.initial_data.get('tags')
         list_ingredients_id = []
         for ingredient in ingredients:
             if int(ingredient['amount']) < 1:
@@ -157,7 +153,9 @@ class PostRecipesSerializer(serializers.ModelSerializer):
             if ingredient['id'] in list_ingredients_id:
                 raise ValidationError('Ингредиенты не уникальны')
             list_ingredients_id.append(ingredient['id'])
-
+        for tag in tags:
+            if tags.count(tag) > 1:
+                raise ValidationError('Тэги не уникальны')
         return data
 
     def to_representation(self, instance):

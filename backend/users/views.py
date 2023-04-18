@@ -44,4 +44,3 @@ class UserViewSet(UserViewSet):
         else:
             get_object_or_404(Follow, user=user, author=author).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-
