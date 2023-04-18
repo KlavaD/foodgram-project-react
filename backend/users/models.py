@@ -1,21 +1,21 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import UniqueConstraint, CheckConstraint
 
-from backend.settings import FIELD_EMAIL_LENGTH, NAMES_LENGTH
 from users.validators import username_validator
 
 
 class User(AbstractUser):
     email = models.EmailField(
-        max_length=FIELD_EMAIL_LENGTH,
+        max_length=settings.FIELD_EMAIL_LENGTH,
         unique=True,
         verbose_name='Электронная почта'
     )
 
     username = models.CharField(
-        max_length=NAMES_LENGTH,
+        max_length=settings.NAMES_LENGTH,
         unique=True,
         validators=[username_validator],
         verbose_name='Никнейм'
@@ -23,6 +23,11 @@ class User(AbstractUser):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+        ordering = ('username',)
 
     def __str__(self):
         return self.username
@@ -45,6 +50,7 @@ class Follow(models.Model):
     class Meta:
         verbose_name = 'Подписчик'
         verbose_name_plural = 'Подписчики'
+        ordering = ('author',)
         constraints = [
             UniqueConstraint(
                 fields=['user', 'author'],
