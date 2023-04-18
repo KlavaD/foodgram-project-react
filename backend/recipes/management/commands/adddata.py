@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 
-from recipes.management.commands._import_models import import_ingredients, \
-    create_tags
+from recipes.management.commands._import_models import (create_tags,
+                                                        import_ingredients)
 
 
 class Command(BaseCommand):

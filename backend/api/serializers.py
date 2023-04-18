@@ -4,8 +4,8 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from recipes.models import (Tag, Ingredient, Recipe, ShoppingCart, Favorite,
-                            ListOfIngredients)
+from recipes.models import (Favorite, Ingredient, ListOfIngredients, Recipe,
+                            ShoppingCart, Tag)
 from users.serializers import CustomUserSerializer, ShortedRecipesSerializer
 
 
@@ -62,19 +62,15 @@ class RecipesSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         request = self.context.get('request')
-        return (
-                request and request.user.is_authenticated
-                and
-                obj.favorite.filter(user=request.user).exists()
-        )
+        return (request
+                and request.user.is_authenticated
+                and obj.favorite.filter(user=request.user).exists())
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
-        return (
-                request and request.user.is_authenticated
-                and
-                obj.shopping_cart.filter(user=request.user).exists()
-        )
+        return (request
+                and request.user.is_authenticated
+                and obj.shopping_cart.filter(user=request.user).exists())
 
     class Meta:
         model = Recipe

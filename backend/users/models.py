@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import UniqueConstraint, CheckConstraint
+from django.db.models import CheckConstraint, UniqueConstraint
 
 from users.validators import username_validator
 

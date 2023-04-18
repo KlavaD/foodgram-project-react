@@ -2,7 +2,7 @@ from django.conf import settings
 from rest_framework import serializers
 
 from recipes.models import Recipe
-from users.models import User, Follow
+from users.models import Follow, User
 from users.validators import username_validator
 
 
@@ -23,11 +23,8 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        return (
-                request and request.user.is_authenticated
-                and
-                obj.author.filter(user=request.user).exists()
-        )
+        return (request and request.user.is_authenticated
+                and obj.author.filter(user=request.user).exists())
 
 
 class ShortedRecipesSerializer(serializers.ModelSerializer):
@@ -49,16 +46,15 @@ class FollowSerializer(CustomUserSerializer):
     recipes_count = serializers.SerializerMethodField()
 
     class Meta(CustomUserSerializer.Meta):
-        fields = CustomUserSerializer.Meta.fields + ('recipes', 'recipes_count')
+        fields = CustomUserSerializer.Meta.fields + (
+            'recipes', 'recipes_count'
+        )
         read_only_fields = ('recipes',)
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        return (
-                request and not request.user.is_authenticated
-                and
-                obj.user == request.user
-        )
+        return (request and request.user.is_authenticated
+                and obj.user == request.user)
 
     def get_recipes(self, obj):
         recipes_limit = self.context.get(

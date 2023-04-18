@@ -8,17 +8,17 @@ from django_filters.rest_framework import DjangoFilterBackend
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
-from rest_framework import viewsets, status
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from api.filters import RecipesFilter, IngredientsFilter
-from api.serializers import (TagsSerializer, RecipesSerializer,
-                             PostRecipesSerializer, ShoppingCartSerializer,
-                             FavoriteSerializer, IngredientsSerializer)
-from recipes.models import (Tag, Recipe, ShoppingCart, Ingredient,
-                            Favorite, ListOfIngredients)
+from api.filters import IngredientsFilter, RecipesFilter
+from api.serializers import (FavoriteSerializer, IngredientsSerializer,
+                             PostRecipesSerializer, RecipesSerializer,
+                             ShoppingCartSerializer, TagsSerializer)
+from recipes.models import (Favorite, Ingredient, ListOfIngredients, Recipe,
+                            ShoppingCart, Tag)
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
