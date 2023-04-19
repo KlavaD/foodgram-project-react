@@ -19,9 +19,6 @@ services:
   frontend:
     image: klavad/foodgram-frontend:latest
     restart: always
-#    build:
-#      context: ../frontend
-#      dockerfile: Dockerfile
     volumes:
       - ../frontend/:/app/result_build/
   nginx:
