@@ -56,6 +56,12 @@ jobs:
             push: true
             tags: klavad/foodgram-project:latest
 
+          uses: docker/build-push-action@v2
+          with:
+            context: ./frontend/
+            push: true
+            tags: klavad/foodgram-frontend:latest
+
   deploy:
     runs-on: ubuntu-latest
     needs: build_and_push_to_docker_hub
