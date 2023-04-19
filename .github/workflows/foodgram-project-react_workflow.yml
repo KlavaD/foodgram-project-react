@@ -79,7 +79,9 @@ jobs:
             sudo docker-compose stop
             sudo docker-compose rm web
             sudo docker-compose rm frontend
-
+            sudo docker rmi klavad/foodgram-project:latest
+            sudo docker rmi klavad/foodgram-frontend:latest
+            cd infra
             touch .env
             echo DB_ENGINE=${{ secrets.DB_ENGINE }} > .env
             echo DB_NAME=${{ secrets.DB_NAME }} >> .env
