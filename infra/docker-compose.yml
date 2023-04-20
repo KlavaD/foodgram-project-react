@@ -22,7 +22,7 @@ services:
     volumes:
       - ../frontend/:/app/result_build/
   nginx:
-    image: nginx:1.19.3
+    image: nginx:1.15-alpine
     ports:
       - "80:80"
       - "443:443"
