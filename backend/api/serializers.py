@@ -137,7 +137,7 @@ class PostRecipesSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         errors = []
-        if self.initial_data.get('cooking_time') < 1:
+        if int(self.initial_data.get('cooking_time')) < 1:
             errors.append('Время приготовления должно быть больше 0')
         ingredients = self.initial_data.get('ingredients')
         if not ingredients:

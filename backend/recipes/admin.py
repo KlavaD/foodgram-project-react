@@ -31,7 +31,9 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @admin.display(description='Фото')
     def take_image(self, obj):
-        return mark_safe(f'<img src={obj.image.url} width="80" height="60">')
+        if obj.image:
+            return mark_safe(f'<img src={obj.image.url} width="80" height="60">')
+        return None
 
     list_display = (
         'name', 'pk', 'author', 'take_image',

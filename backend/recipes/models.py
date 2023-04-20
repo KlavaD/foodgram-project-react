@@ -79,7 +79,7 @@ class Recipe(models.Model):
     image = models.ImageField(
         verbose_name='Фото',
         upload_to='recipe/images/',
-        blank=True
+        blank=True,
     )
     text = models.CharField(
         max_length=settings.FIELD_TEXT_LENGTH,
