@@ -39,7 +39,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return RecipesSerializer
 
     @staticmethod
-    def post(serializer, request, recipe_id):
+    def _post(serializer, request, recipe_id):
         data = {
             'user': request.user,
             'recipe': recipe_id
@@ -52,11 +52,11 @@ class RecipesViewSet(viewsets.ModelViewSet):
         )
         serializer_data.is_valid(raise_exception=True)
         serializer_data.save(user=request.user,
-                             recipe=recipe_id)
+                             recipe_id=recipe_id)
         return Response(serializer_data.data, status=status.HTTP_201_CREATED)
 
     @staticmethod
-    def delete(model, request, recipe_id):
+    def _delete(model, request, recipe_id):
         get_object_or_404(model,
                           recipe_id=recipe_id,
                           user=request.user).delete()
@@ -67,22 +67,22 @@ class RecipesViewSet(viewsets.ModelViewSet):
             methods=['POST'],
             permission_classes=[IsAuthenticated, ])
     def shopping_cart(self, request, recipe_id):
-        return self.post(ShoppingCartSerializer, request, recipe_id)
+        return self._post(ShoppingCartSerializer, request, recipe_id)
 
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, recipe_id):
-        return self.delete(ShoppingCart, request, recipe_id)
+        return self._delete(ShoppingCart, request, recipe_id)
 
     @action(detail=False,
             url_path=r'(?P<recipe_id>\d+)/favorite',
             methods=['POST'],
             permission_classes=[IsAuthenticated, ])
     def favorite(self, request, recipe_id):
-        return self.post(FavoriteSerializer, request, recipe_id)
+        return self._post(FavoriteSerializer, request, recipe_id)
 
     @favorite.mapping.delete
     def delete_favorite(self, request, recipe_id):
-        return self.delete(Favorite, request, recipe_id)
+        return self._delete(Favorite, request, recipe_id)
 
     @staticmethod
     def download_file(data):
