@@ -137,17 +137,18 @@ class PostRecipesSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         errors = []
-        if int(self.initial_data.get('cooking_time')) < 1:
+        cooking_time = data.get('cooking_time')
+        if cooking_time < 1:
             errors.append('Время приготовления должно быть больше 0')
-        ingredients = self.initial_data.get('ingredients')
+        ingredients = data.get('ingredients')
         if not ingredients:
             errors.append('Нет ингредиентов')
-        tags = self.initial_data.get('tags')
+        tags = data.get('tags')
         if not tags:
             errors.append('Нет тэгов')
         list_ingredients_id = []
         for ingredient in ingredients:
-            if int(ingredient['amount']) < 1:
+            if ingredient['amount'] < 1:
                 errors.append('Количество должно быть больше 1')
             if ingredient['id'] in list_ingredients_id:
                 errors.append('Ингредиенты не уникальны')
