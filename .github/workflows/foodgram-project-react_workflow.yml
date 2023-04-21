@@ -76,9 +76,7 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
             cd infra
-            sudo docker-compose stop
-            sudo docker-compose rm web
-            sudo docker-compose rm frontend
+            sudo docker-compose down
             sudo docker rmi klavad/foodgram-project:latest
             sudo docker rmi klavad/foodgram-frontend:latest
             touch .env

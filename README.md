@@ -2,6 +2,8 @@
 # Мой дипломный проект — сайт Foodgram, «Продуктовый помощник». 
 ## На этом сервисе пользователи могут публиковать рецепты, подписываться на публикации других пользователей, добавлять понравившиеся рецепты в список «Избранное», а перед походом в магазин скачивать сводный список продуктов, необходимых для приготовления одного или нескольких выбранных блюд.
 
+http://klavayamdb.sytes.net/admin/ 
+
 Проект создавала я - 
 * ### Клавдия Дунаева
 
@@ -19,7 +21,7 @@ git clone https://github.com/KlavaD/foodgram-project-react.git
 
 **Описание команд для запуска приложения в контейнерах**
 
-Создайте файл .env с переменными окружения для работы с базой данных:
+Создайте файл .env с переменными окружения:
 ```
 DB_ENGINE=django.db.backends.postgresql
 DB_NAME=< имя базы данных>
@@ -61,10 +63,10 @@ docker-compose exec web python manage.py adddata
 ```
 
 Получение списка рецептов:
->**GET** http://127.0.0.1/api/recipes/
+>**GET** .../api/recipes/
 
 Создание рецепта (только зарегистрированный пользователь):
->**POST** http://127.0.0.1/api/recipes/
+>**POST** .../api/recipes/
 > 
 ```
 {
@@ -86,17 +88,17 @@ docker-compose exec web python manage.py adddata
 ```
 
 Получение списка покупок:
->**GET** http://127.0.0.1/api/recipes/download_shopping_cart/
+>**GET** .../api/recipes/download_shopping_cart/
 
 Получение списка тэгов:
->**GET** http://127.0.0.1/api/tags/
+>**GET** .../api/tags/
 
 Просмотр подписок:
->**GET** http://127.0.0.1/api/v1/titles/{title_id}/reviews/
+>**GET** .../api/v1/titles/{title_id}/reviews/
 
 Подписаться на пользователя:
->**POST** http://127.0.0.1/api/users/{id}/subscribe/
+>**POST** .../api/users/{id}/subscribe/
 
 Остальные запросы можно посмотреть в документации для Foodgram:
-> http://127.0.0.1/redoc/
+> .../api/docs/
 
