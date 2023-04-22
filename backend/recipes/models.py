@@ -96,7 +96,10 @@ class Recipe(models.Model):
         verbose_name='Время приготовления',
         blank=False,
         null=False,
-        validators=[MinValueValidator(1)]
+        validators=[MinValueValidator(
+            1,
+            message='Время приготовления должно быть больше 1 минуты!'
+        )]
     )
     pub_date = models.DateTimeField(
         verbose_name='Дата создания',
@@ -125,7 +128,10 @@ class ListOfIngredients(models.Model):
         verbose_name='Количество',
         blank=False,
         null=False,
-        validators=[MinValueValidator(1)]
+        validators=[MinValueValidator(
+            1,
+            message='Количество должно быть больше 1'
+        )]
     )
     recipe = models.ForeignKey(
         Recipe,

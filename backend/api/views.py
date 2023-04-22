@@ -39,7 +39,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return RecipesSerializer
 
     @staticmethod
-    def _post(serializer, request, recipe_id):
+    def create_in_favorite_shopping(serializer, request, recipe_id):
         data = {
             'user': request.user,
             'recipe': recipe_id
@@ -67,7 +67,9 @@ class RecipesViewSet(viewsets.ModelViewSet):
             methods=['POST'],
             permission_classes=[IsAuthenticated, ])
     def shopping_cart(self, request, recipe_id):
-        return self._post(ShoppingCartSerializer, request, recipe_id)
+        return self.create_in_favorite_shopping(
+            ShoppingCartSerializer, request, recipe_id
+        )
 
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, recipe_id):
@@ -78,7 +80,8 @@ class RecipesViewSet(viewsets.ModelViewSet):
             methods=['POST'],
             permission_classes=[IsAuthenticated, ])
     def favorite(self, request, recipe_id):
-        return self._post(FavoriteSerializer, request, recipe_id)
+        return self.create_in_favorite_shopping(FavoriteSerializer, request,
+                                                recipe_id)
 
     @favorite.mapping.delete
     def delete_favorite(self, request, recipe_id):
