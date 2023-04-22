@@ -60,10 +60,10 @@ docker-compose exec web python manage.py adddata
 
 ## Примеры запросов: ##
 Регистрация нового пользователя:
->**POST** http://127.0.0.1/api/users/
+>**POST** .../api/users/
 
 Для получения токена отправьте логин и код, который пришел вам на электронную почту:
->**POST** http://127.0.0.1/api/auth/token/login/
+>**POST** .../api/auth/token/login/
 
 ```
 {
