@@ -16,7 +16,7 @@ class UserViewSet(UserViewSet):
             permission_classes=[IsAuthenticated, ],
             pagination_class=LimitOffsetPagination)
     def subscriptions(self, request):
-        queryset = Follow.objects.filter(user=self.request.user)
+        queryset = User.objects.filter(author__user=self.request.user)
         queryset = self.paginate_queryset(queryset)
         serializer = FollowSerializer(
             queryset, many=True, context={'request': request}

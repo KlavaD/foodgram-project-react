@@ -36,14 +36,9 @@ class ShortedRecipesSerializer(serializers.ModelSerializer):
 
 
 class FollowSerializer(CustomUserSerializer):
-    email = serializers.ReadOnlyField(source='author.email')
-    id = serializers.ReadOnlyField(source='author.id')
-    username = serializers.ReadOnlyField(source='author.username')
-    first_name = serializers.ReadOnlyField(source='author.first_name')
-    last_name = serializers.ReadOnlyField(source='author.last_name')
     is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
+    recipes_count = serializers.ReadOnlyField(source='recipes.count')
 
     class Meta(CustomUserSerializer.Meta):
         fields = CustomUserSerializer.Meta.fields + (
@@ -53,19 +48,16 @@ class FollowSerializer(CustomUserSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        return (request and request.user.is_authenticated
-                and obj.user == request.user)
+        return request and request.user.is_authenticated
 
     def get_recipes(self, obj):
+        print('obj', obj)
         recipes_limit = self.context.get(
             'request').query_params.get('recipes_limit')
-        data = obj.author.recipes.all()
+        data = obj.recipes.all()
         if recipes_limit:
             data = data[:int(recipes_limit)]
         return ShortedRecipesSerializer(data, many=True).data
-
-    def get_recipes_count(self, obj):
-        return obj.author.recipes.count()
 
 
 class PostFollowSerializer(serializers.ModelSerializer):
